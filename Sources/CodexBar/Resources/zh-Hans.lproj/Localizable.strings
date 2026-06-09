@@ -474,6 +474,8 @@
 "switcher_shows_icons_subtitle" = "在切换器中显示提供商图标（否则显示每周进度线）。";
 "show_most_used_provider_title" = "显示用量最高的提供商";
 "show_most_used_provider_subtitle" = "菜单栏会自动显示最接近速率限制的提供商。";
+"show_all_providers_title" = "显示所有提供商";
+"show_all_providers_subtitle" = "菜单栏在一条中显示每个已启用提供商的图标和百分比。";
 "menu_bar_shows_percent_title" = "菜单栏显示百分比";
 "menu_bar_shows_percent_subtitle" = "将小动物进度条替换为提供商品牌图标和百分比。";
 "display_mode_title" = "显示模式";

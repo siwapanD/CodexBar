@@ -321,6 +321,24 @@ extension StatusItemController {
             return .none
         }()
         if showBrandPercent,
+           self.shouldMergeIcons,
+           self.settings.menuBarShowsAllProviders,
+           !needsAnimation,
+           let stripResult = self.makeMergedAllProvidersStrip(statusIndicator: statusIndicator)
+        {
+            switch stripResult {
+            case .skip:
+                self.noteIconPerfRender(skipped: true)
+                return true
+            case let .image(image):
+                self.setButtonImage(image, for: button)
+                self.setButtonTitle(nil, for: button)
+                self.noteIconPerfRender(skipped: false)
+                return false
+            }
+        }
+
+        if showBrandPercent,
            let brand = ProviderBrandIcon.image(for: primaryProvider)
         {
             let displayText = self.menuBarDisplayText(for: primaryProvider, snapshot: snapshot)
@@ -421,6 +439,39 @@ extension StatusItemController {
         }
         self.lastAppliedProviderIconRenderSignatures[provider] = signature
         return false
+    }
+
+    enum MergedAllProvidersStripResult {
+        case skip
+        case image(NSImage)
+    }
+
+    /// Builds a single horizontal strip showing every enabled provider's brand icon + percent.
+    /// Returns `nil` when fewer than two providers can render a brand glyph (caller falls back to
+    /// the single-provider brand display).
+    func makeMergedAllProvidersStrip(statusIndicator: ProviderStatusIndicator)
+        -> MergedAllProvidersStripResult?
+    {
+        let providers = self.store.enabledProvidersForDisplay()
+        guard providers.count > 1 else { return nil }
+
+        var entries: [MergedBrandPercentIcon.Entry] = []
+        var signatureParts: [String] = ["mode=mergedAll", "status=\(statusIndicator.rawValue)"]
+        for provider in providers {
+            guard let brand = ProviderBrandIcon.image(for: provider) else { continue }
+            let snapshot = self.store.snapshot(for: provider)
+            let text = self.menuBarDisplayText(for: provider, snapshot: snapshot)
+            entries.append(MergedBrandPercentIcon.Entry(brand: brand, text: text))
+            signatureParts.append("\(provider.rawValue)=\(text ?? "nil")")
+        }
+        guard entries.count > 1 else { return nil }
+
+        let signature = signatureParts.joined(separator: "|")
+        if self.shouldSkipMergedIconRender(signature) {
+            return .skip
+        }
+        guard let image = MergedBrandPercentIcon.image(entries: entries) else { return nil }
+        return .image(image)
     }
 
     @discardableResult

@@ -35,8 +35,15 @@ struct DisplayPane: View {
                         title: L("show_most_used_provider_title"),
                         subtitle: L("show_most_used_provider_subtitle"),
                         binding: self.$settings.menuBarShowsHighestUsage)
-                        .disabled(!self.settings.mergeIcons)
-                        .opacity(self.settings.mergeIcons ? 1 : 0.5)
+                        .disabled(!self.settings.mergeIcons || self.settings.menuBarShowsAllProviders)
+                        .opacity(self.settings.mergeIcons && !self.settings.menuBarShowsAllProviders ? 1 : 0.5)
+                    PreferenceToggleRow(
+                        title: L("show_all_providers_title"),
+                        subtitle: L("show_all_providers_subtitle"),
+                        binding: self.$settings.menuBarShowsAllProviders)
+                        .disabled(!self.settings.mergeIcons || !self.settings.menuBarShowsBrandIconWithPercent)
+                        .opacity(
+                            self.settings.mergeIcons && self.settings.menuBarShowsBrandIconWithPercent ? 1 : 0.5)
                     PreferenceToggleRow(
                         title: L("menu_bar_shows_percent_title"),
                         subtitle: L("menu_bar_shows_percent_subtitle"),

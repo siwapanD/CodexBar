@@ -25,6 +25,7 @@ extension SettingsStore {
         _ = self.providerChangelogLinksEnabled
         _ = self.menuBarShowsBrandIconWithPercent
         _ = self.menuBarShowsHighestUsage
+        _ = self.menuBarShowsAllProviders
         _ = self.menuBarDisplayMode
         _ = self.kiroMenuBarDisplayMode
         _ = self.historicalTrackingEnabled
