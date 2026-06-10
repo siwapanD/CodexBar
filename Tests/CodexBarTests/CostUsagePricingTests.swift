@@ -387,6 +387,34 @@ struct CostUsagePricingTests {
     }
 
     @Test
+    func `claude family fallback covers all opus and sonnet generations`() {
+        // Use future/fictional variants that are absent from the built-in table and models.dev so
+        // the family fallback is exercised deterministically.
+        let opusModels = ["claude-opus-5", "claude-opus-6-20280101", "anthropic/claude-opus-4-9"]
+        for model in opusModels {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            #expect(cost == (10.0 * 5e-6) + (5.0 * 2.5e-5))
+        }
+
+        let sonnetModels = ["claude-sonnet-5", "claude-sonnet-6-20280101", "anthropic/claude-sonnet-4-9"]
+        for model in sonnetModels {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            // Below the 200k threshold, so base sonnet rates apply.
+            #expect(cost == (10.0 * 3e-6) + (5.0 * 1.5e-5))
+        }
+    }
+
+    @Test
     func `claude cost returns nil for unknown models`() {
         let cost = CostUsagePricing.claudeCostUSD(
             model: "glm-4.6",

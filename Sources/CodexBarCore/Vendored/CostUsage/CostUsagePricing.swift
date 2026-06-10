@@ -575,17 +575,20 @@ enum CostUsagePricing {
     }
 
     /// Representative pricing for a Claude model family, used only when an exact price is
-    /// unavailable. Keyed off the family (opus / sonnet / haiku) so newly released variants are
-    /// still estimated rather than dropped.
+    /// unavailable. Matches any Claude Opus / Sonnet / Haiku variant — regardless of generation
+    /// (`claude-3-opus`, `claude-opus-4-8`, a future `claude-opus-5`, …) or date suffix — so every
+    /// Opus and Sonnet model is estimated rather than dropped. Exact table entries still take
+    /// precedence for precise per-model pricing.
     private static func claudeFamilyFallbackPricing(_ rawModel: String) -> ClaudePricing? {
         let model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if model.contains("claude-opus-4") {
+        guard model.contains("claude") else { return nil }
+        if model.contains("opus") {
             return self.claude["claude-opus-4-7"]
         }
-        if model.contains("claude-sonnet-4") {
+        if model.contains("sonnet") {
             return self.claude["claude-sonnet-4-6"]
         }
-        if model.contains("claude-haiku-4") {
+        if model.contains("haiku") {
             return self.claude["claude-haiku-4-5"]
         }
         return nil
