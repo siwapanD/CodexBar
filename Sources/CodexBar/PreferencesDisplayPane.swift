@@ -45,6 +45,12 @@ struct DisplayPane: View {
                         .opacity(
                             self.settings.mergeIcons && self.settings.menuBarShowsBrandIconWithPercent ? 1 : 0.5)
                     PreferenceToggleRow(
+                        title: L("brand_icon_color_title"),
+                        subtitle: L("brand_icon_color_subtitle"),
+                        binding: self.$settings.menuBarBrandIconsUseColor)
+                        .disabled(!self.settings.menuBarShowsBrandIconWithPercent)
+                        .opacity(self.settings.menuBarShowsBrandIconWithPercent ? 1 : 0.5)
+                    PreferenceToggleRow(
                         title: L("menu_bar_shows_percent_title"),
                         subtitle: L("menu_bar_shows_percent_subtitle"),
                         binding: self.$settings.menuBarShowsBrandIconWithPercent)

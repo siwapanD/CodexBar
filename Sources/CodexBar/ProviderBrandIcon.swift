@@ -31,4 +31,30 @@ enum ProviderBrandIcon {
         image.isTemplate = true
         return image
     }
+
+    /// Returns the provider's brand icon tinted with its brand color (non-template),
+    /// for use when the user opts into colorful menu bar icons.
+    static func coloredImage(for provider: UsageProvider) -> NSImage? {
+        guard let base = self.image(for: provider) else { return nil }
+        let brand = ProviderDescriptorRegistry.descriptor(for: provider).branding.color
+        let color = NSColor(deviceRed: brand.red, green: brand.green, blue: brand.blue, alpha: 1)
+        return base.codexBarTinted(with: color)
+    }
+}
+
+extension NSImage {
+    /// Produces a copy of a template image filled with `color`, returned as a
+    /// non-template image so the color survives menu bar rendering.
+    func codexBarTinted(with color: NSColor) -> NSImage {
+        let result = NSImage(size: self.size)
+        result.lockFocus()
+        let rect = NSRect(origin: .zero, size: self.size)
+        self.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        color.set()
+        NSGraphicsContext.current?.compositingOperation = .sourceAtop
+        NSBezierPath(rect: rect).fill()
+        result.unlockFocus()
+        result.isTemplate = false
+        return result
+    }
 }

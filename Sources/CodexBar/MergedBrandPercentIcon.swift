@@ -24,19 +24,25 @@ enum MergedBrandPercentIcon {
         NSFont.menuBarFont(ofSize: 0)
     }
 
-    private static var textAttributes: [NSAttributedString.Key: Any] {
+    private static func textAttributes(color: NSColor) -> [NSAttributedString.Key: Any] {
         [
             .font: self.textFont,
-            // Template images are tinted by AppKit using the alpha channel, so the
-            // concrete color only needs to be fully opaque.
-            .foregroundColor: NSColor.black,
+            .foregroundColor: color,
         ]
     }
 
-    static func image(entries: [Entry]) -> NSImage? {
+    /// - Parameters:
+    ///   - colored: when `true` the result is a non-template image (so brand colors survive),
+    ///     and `textColor` is used for the percentages. When `false` the result is a template
+    ///     image tinted monochrome by AppKit and `textColor` should be opaque black.
+    static func image(
+        entries: [Entry],
+        colored: Bool = false,
+        textColor: NSColor = .black) -> NSImage?
+    {
         guard !entries.isEmpty else { return nil }
 
-        let attributes = self.textAttributes
+        let attributes = self.textAttributes(color: textColor)
         let font = self.textFont
         // Adapt height so tall glyphs are never clipped, with a floor matching the
         // standard 18pt template icon height.
@@ -76,7 +82,7 @@ enum MergedBrandPercentIcon {
         let canvasWidth = ceil(max(totalWidth, self.iconSize))
         let outputSize = NSSize(width: canvasWidth, height: height)
 
-        let image = self.renderImage(size: outputSize) {
+        let image = self.renderImage(size: outputSize, isTemplate: !colored) {
             var cursorX = self.horizontalPadding
             for item in measured {
                 let iconRect = NSRect(
@@ -109,7 +115,7 @@ enum MergedBrandPercentIcon {
         return image
     }
 
-    private static func renderImage(size: NSSize, _ draw: () -> Void) -> NSImage {
+    private static func renderImage(size: NSSize, isTemplate: Bool = true, _ draw: () -> Void) -> NSImage {
         let image = NSImage(size: size)
         if let rep = NSBitmapImageRep(
             bitmapDataPlanes: nil,
@@ -136,7 +142,7 @@ enum MergedBrandPercentIcon {
             draw()
             image.unlockFocus()
         }
-        image.isTemplate = true
+        image.isTemplate = isTemplate
         return image
     }
 }

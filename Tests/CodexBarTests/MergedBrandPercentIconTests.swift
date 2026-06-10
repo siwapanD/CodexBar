@@ -42,6 +42,25 @@ struct MergedBrandPercentIconTests {
     }
 
     @Test
+    func `colored strip is non-template and text color is honored`() {
+        let templateStrip = MergedBrandPercentIcon.image(
+            entries: [.init(brand: self.solidImage(), text: "45%")])
+        let coloredStrip = MergedBrandPercentIcon.image(
+            entries: [.init(brand: self.solidImage(), text: "45%")],
+            colored: true,
+            textColor: .white)
+        #expect(templateStrip?.isTemplate == true)
+        #expect(coloredStrip?.isTemplate == false)
+    }
+
+    @Test
+    func `tinting returns a non-template image`() {
+        let tinted = self.solidImage().codexBarTinted(with: .systemRed)
+        #expect(tinted.isTemplate == false)
+        #expect(tinted.size == NSSize(width: 16, height: 16))
+    }
+
+    @Test
     func `percent text widens a provider group`() {
         let withText = MergedBrandPercentIcon.image(
             entries: [.init(brand: self.solidImage(), text: "100%")])

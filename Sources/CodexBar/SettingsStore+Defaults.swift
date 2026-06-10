@@ -345,6 +345,14 @@ extension SettingsStore {
         }
     }
 
+    var menuBarBrandIconsUseColor: Bool {
+        get { self.defaultsState.menuBarBrandIconsUseColor }
+        set {
+            self.defaultsState.menuBarBrandIconsUseColor = newValue
+            self.userDefaults.set(newValue, forKey: "menuBarBrandIconsUseColor")
+        }
+    }
+
     var claudeOAuthKeychainPromptMode: ClaudeOAuthKeychainPromptMode {
         get {
             let raw = self.defaultsState.claudeOAuthKeychainPromptModeRaw
