@@ -64,6 +64,70 @@ struct CostUsageScannerClaudeRegressionTests {
     }
 
     @Test
+    func `isClaudeFamilyModel keeps Claude variants and rejects routed models`() {
+        #expect(CostUsageScanner.isClaudeFamilyModel("claude-opus-4-6") == true)
+        #expect(CostUsageScanner.isClaudeFamilyModel("claude-sonnet-4-6@20260205") == true)
+        #expect(CostUsageScanner.isClaudeFamilyModel("us.anthropic.claude-3-5-sonnet-20241022-v2:0") == true)
+        #expect(CostUsageScanner.isClaudeFamilyModel("anthropic/claude-3-haiku") == true)
+        #expect(CostUsageScanner.isClaudeFamilyModel("qwen3.5:9b") == false)
+        #expect(CostUsageScanner.isClaudeFamilyModel("gpt-4o") == false)
+        #expect(CostUsageScanner.isClaudeFamilyModel("deepseek-chat") == false)
+        #expect(CostUsageScanner.isClaudeFamilyModel("") == false)
+    }
+
+    @Test
+    func `parseClaudeFile excludes non-Claude routed models`() throws {
+        let env = try CostUsageTestEnvironment()
+        defer { env.cleanup() }
+
+        let day = try env.makeLocalNoon(year: 2025, month: 12, day: 21)
+        let iso0 = env.isoString(for: day)
+        let iso1 = env.isoString(for: day.addingTimeInterval(1))
+
+        let fileURL = try env.writeClaudeProjectFile(
+            relativePath: "project-a/parse-routed-model.jsonl",
+            contents: env.jsonl([
+                [
+                    "type": "assistant",
+                    "timestamp": iso0,
+                    "message": [
+                        "id": "msg_claude",
+                        "model": "claude-sonnet-4-20250514",
+                        "usage": [
+                            "input_tokens": 40,
+                            "cache_creation_input_tokens": 0,
+                            "cache_read_input_tokens": 0,
+                            "output_tokens": 7,
+                        ],
+                    ],
+                ],
+                [
+                    "type": "assistant",
+                    "timestamp": iso1,
+                    "message": [
+                        "id": "msg_qwen",
+                        "model": "qwen3.5:9b",
+                        "usage": [
+                            "input_tokens": 1_000,
+                            "cache_creation_input_tokens": 0,
+                            "cache_read_input_tokens": 0,
+                            "output_tokens": 500,
+                        ],
+                    ],
+                ],
+            ]))
+
+        let parsed = CostUsageScanner.parseClaudeFile(
+            fileURL: fileURL,
+            range: CostUsageScanner.CostUsageDayRange(since: day, until: day),
+            providerFilter: .all)
+
+        #expect(parsed.rows.count == 1)
+        #expect(parsed.rows.allSatisfy { $0.model.hasPrefix("claude") })
+        #expect(parsed.rows.first?.output == 7)
+    }
+
+    @Test
     func `parseClaudeFile snapshots keep missing id rows distinct`() throws {
         let env = try CostUsageTestEnvironment()
         defer { env.cleanup() }

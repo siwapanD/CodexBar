@@ -110,6 +110,10 @@ extension CostUsageScanner {
 
                     guard let message = obj["message"] as? [String: Any] else { return }
                     guard let model = message["model"] as? String else { return }
+                    // Claude Code can be routed to non-Anthropic models (e.g. local Ollama models
+                    // like "qwen3.5:9b"). Those entries land in the Claude logs but are not Claude
+                    // usage, so exclude them from the Claude provider's cost/token stats.
+                    guard Self.isClaudeFamilyModel(model) else { return }
                     guard let usage = message["usage"] as? [String: Any] else { return }
 
                     let input = max(0, toInt(usage["input_tokens"]))
@@ -193,6 +197,23 @@ extension CostUsageScanner {
 
     private static func claudePathRole(fileURL: URL) -> ClaudePathRole {
         fileURL.path.contains("/subagents/") ? .subagent : .parent
+    }
+
+    /// Whether a logged model belongs to the Anthropic Claude family. Handles direct Anthropic
+    /// names (`claude-opus-4-6`), Vertex AI (`claude-opus-4-6@20260205`), and Bedrock-style IDs
+    /// (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`). Non-Claude models routed through Claude
+    /// Code (`qwen3.5:9b`, `gpt-4o`, `deepseek-chat`, …) return false.
+    static func isClaudeFamilyModel(_ rawModel: String) -> Bool {
+        var model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if model.isEmpty { return false }
+        // Strip a leading provider segment, e.g. "anthropic/" or "anthropic." or bedrock's
+        // "us.anthropic." / "eu.anthropic." prefixes.
+        if let range = model.range(of: "anthropic.") {
+            model = String(model[range.upperBound...])
+        } else if model.hasPrefix("anthropic/") {
+            model = String(model.dropFirst("anthropic/".count))
+        }
+        return model.hasPrefix("claude")
     }
 
     private static func claudeCanonicalRowKey(_ row: ClaudeUsageRow) -> String? {

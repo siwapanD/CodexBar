@@ -6,7 +6,8 @@ enum CostUsageCacheIO {
         case .codex:
             8
         case .claude, .vertexai:
-            2
+            // v3: exclude non-Claude models (e.g. local "qwen3.5:9b") routed through Claude Code.
+            3
         default:
             1
         }
