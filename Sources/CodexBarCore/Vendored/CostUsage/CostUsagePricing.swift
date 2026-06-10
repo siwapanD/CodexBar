@@ -275,6 +275,16 @@ enum CostUsagePricing {
             outputCostPerTokenAboveThreshold: nil,
             cacheCreationInputCostPerTokenAboveThreshold: nil,
             cacheReadInputCostPerTokenAboveThreshold: nil),
+        "claude-opus-4-8": ClaudePricing(
+            inputCostPerToken: 5e-6,
+            outputCostPerToken: 2.5e-5,
+            cacheCreationInputCostPerToken: 6.25e-6,
+            cacheReadInputCostPerToken: 5e-7,
+            thresholdTokens: nil,
+            inputCostPerTokenAboveThreshold: nil,
+            outputCostPerTokenAboveThreshold: nil,
+            cacheCreationInputCostPerTokenAboveThreshold: nil,
+            cacheReadInputCostPerTokenAboveThreshold: nil),
         "claude-sonnet-4-5": ClaudePricing(
             inputCostPerToken: 3e-6,
             outputCostPerToken: 1.5e-5,
@@ -508,28 +518,77 @@ enum CostUsagePricing {
         modelsDevCatalog: ModelsDevCatalog? = nil,
         modelsDevCacheRoot: URL? = nil) -> Double?
     {
-        if let lookup = self.modelsDevLookup(
+        let modelsDevPricing = self.modelsDevLookup(
             providerID: self.claudeModelsDevProviderID,
             model: model,
             catalog: modelsDevCatalog,
-            cacheRoot: modelsDevCacheRoot)
+            cacheRoot: modelsDevCacheRoot)?.pricing
+        let builtInPricing = self.claude[self.normalizeClaudeModel(model)]
+
+        // Prefer the live models.dev catalog, but only when it carries a usable (non-zero) price.
+        // A catalog entry that lists zero input/output cost (e.g. a model still awaiting pricing)
+        // would otherwise mask the audited built-in price and surface as $0.00.
+        if let modelsDevPricing,
+           modelsDevPricing.inputCostPerToken > 0 || modelsDevPricing.outputCostPerToken > 0
         {
             return self.claudeCostUSD(
-                pricing: lookup.pricing,
+                pricing: modelsDevPricing,
                 inputTokens: inputTokens,
                 cacheReadInputTokens: cacheReadInputTokens,
                 cacheCreationInputTokens: cacheCreationInputTokens,
                 outputTokens: outputTokens)
         }
 
-        let key = self.normalizeClaudeModel(model)
-        guard let pricing = self.claude[key] else { return nil }
-        return self.claudeCostUSD(
-            pricing: pricing,
-            inputTokens: inputTokens,
-            cacheReadInputTokens: cacheReadInputTokens,
-            cacheCreationInputTokens: cacheCreationInputTokens,
-            outputTokens: outputTokens)
+        if let builtInPricing {
+            return self.claudeCostUSD(
+                pricing: builtInPricing,
+                inputTokens: inputTokens,
+                cacheReadInputTokens: cacheReadInputTokens,
+                cacheCreationInputTokens: cacheCreationInputTokens,
+                outputTokens: outputTokens)
+        }
+
+        // Future-proofing: a brand-new Claude model (e.g. a later claude-opus-4-N) may not yet be
+        // in the built-in table or models.dev. Estimate from the model family's representative
+        // pricing instead of giving up and showing no cost.
+        if let familyPricing = self.claudeFamilyFallbackPricing(model) {
+            return self.claudeCostUSD(
+                pricing: familyPricing,
+                inputTokens: inputTokens,
+                cacheReadInputTokens: cacheReadInputTokens,
+                cacheCreationInputTokens: cacheCreationInputTokens,
+                outputTokens: outputTokens)
+        }
+
+        // No built-in or family match: fall back to whatever models.dev provided (possibly a
+        // genuinely free model priced at zero) so catalog-known models still resolve.
+        if let modelsDevPricing {
+            return self.claudeCostUSD(
+                pricing: modelsDevPricing,
+                inputTokens: inputTokens,
+                cacheReadInputTokens: cacheReadInputTokens,
+                cacheCreationInputTokens: cacheCreationInputTokens,
+                outputTokens: outputTokens)
+        }
+
+        return nil
+    }
+
+    /// Representative pricing for a Claude model family, used only when an exact price is
+    /// unavailable. Keyed off the family (opus / sonnet / haiku) so newly released variants are
+    /// still estimated rather than dropped.
+    private static func claudeFamilyFallbackPricing(_ rawModel: String) -> ClaudePricing? {
+        let model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if model.contains("claude-opus-4") {
+            return self.claude["claude-opus-4-7"]
+        }
+        if model.contains("claude-sonnet-4") {
+            return self.claude["claude-sonnet-4-6"]
+        }
+        if model.contains("claude-haiku-4") {
+            return self.claude["claude-haiku-4-5"]
+        }
+        return nil
     }
 
     private static func claudeCostUSD(
