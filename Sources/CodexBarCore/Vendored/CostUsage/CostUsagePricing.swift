@@ -57,6 +57,14 @@ enum CostUsagePricing {
         let cacheReadInputCostPerTokenAboveThreshold: Double?
     }
 
+    private struct ClaudeCostTokens {
+        let input: Int
+        let cacheRead: Int
+        let cacheCreation: Int
+        let cacheCreation1h: Int
+        let output: Int
+    }
+
     private static let codex: [String: CodexPricing] = [
         "gpt-5": CodexPricing(
             inputCostPerToken: 1.25e-6,
@@ -205,6 +213,16 @@ enum CostUsagePricing {
     }
 
     private static let claude: [String: ClaudePricing] = [
+        "claude-fable-5": ClaudePricing(
+            inputCostPerToken: 1e-5,
+            outputCostPerToken: 5e-5,
+            cacheCreationInputCostPerToken: 1.25e-5,
+            cacheReadInputCostPerToken: 1e-6,
+            thresholdTokens: nil,
+            inputCostPerTokenAboveThreshold: nil,
+            outputCostPerTokenAboveThreshold: nil,
+            cacheCreationInputCostPerTokenAboveThreshold: nil,
+            cacheReadInputCostPerTokenAboveThreshold: nil),
         "claude-haiku-4-5-20251001": ClaudePricing(
             inputCostPerToken: 1e-6,
             outputCostPerToken: 5e-6,
@@ -300,11 +318,11 @@ enum CostUsagePricing {
             outputCostPerToken: 1.5e-5,
             cacheCreationInputCostPerToken: 3.75e-6,
             cacheReadInputCostPerToken: 3e-7,
-            thresholdTokens: 200_000,
-            inputCostPerTokenAboveThreshold: 6e-6,
-            outputCostPerTokenAboveThreshold: 2.25e-5,
-            cacheCreationInputCostPerTokenAboveThreshold: 7.5e-6,
-            cacheReadInputCostPerTokenAboveThreshold: 6e-7),
+            thresholdTokens: nil,
+            inputCostPerTokenAboveThreshold: nil,
+            outputCostPerTokenAboveThreshold: nil,
+            cacheCreationInputCostPerTokenAboveThreshold: nil,
+            cacheReadInputCostPerTokenAboveThreshold: nil),
         "claude-sonnet-4-5-20250929": ClaudePricing(
             inputCostPerToken: 3e-6,
             outputCostPerToken: 1.5e-5,
@@ -336,6 +354,30 @@ enum CostUsagePricing {
             cacheCreationInputCostPerTokenAboveThreshold: nil,
             cacheReadInputCostPerTokenAboveThreshold: nil),
         "claude-sonnet-4-20250514": ClaudePricing(
+            inputCostPerToken: 3e-6,
+            outputCostPerToken: 1.5e-5,
+            cacheCreationInputCostPerToken: 3.75e-6,
+            cacheReadInputCostPerToken: 3e-7,
+            thresholdTokens: 200_000,
+            inputCostPerTokenAboveThreshold: 6e-6,
+            outputCostPerTokenAboveThreshold: 2.25e-5,
+            cacheCreationInputCostPerTokenAboveThreshold: 7.5e-6,
+            cacheReadInputCostPerTokenAboveThreshold: 6e-7),
+    ]
+
+    private static let claudeFullContextStandardPricingCutoff = Date(timeIntervalSince1970: 1_773_360_000)
+    private static let claudeHistoricalLongContext: [String: ClaudePricing] = [
+        "claude-opus-4-6": ClaudePricing(
+            inputCostPerToken: 5e-6,
+            outputCostPerToken: 2.5e-5,
+            cacheCreationInputCostPerToken: 6.25e-6,
+            cacheReadInputCostPerToken: 5e-7,
+            thresholdTokens: 200_000,
+            inputCostPerTokenAboveThreshold: 1e-5,
+            outputCostPerTokenAboveThreshold: 3.75e-5,
+            cacheCreationInputCostPerTokenAboveThreshold: 1.25e-5,
+            cacheReadInputCostPerTokenAboveThreshold: 1e-6),
+        "claude-sonnet-4-6": ClaudePricing(
             inputCostPerToken: 3e-6,
             outputCostPerToken: 1.5e-5,
             cacheCreationInputCostPerToken: 3.75e-6,
@@ -514,138 +556,81 @@ enum CostUsagePricing {
         inputTokens: Int,
         cacheReadInputTokens: Int,
         cacheCreationInputTokens: Int,
+        cacheCreationInputTokens1h: Int = 0,
         outputTokens: Int,
+        pricingDate: Date? = nil,
         modelsDevCatalog: ModelsDevCatalog? = nil,
         modelsDevCacheRoot: URL? = nil) -> Double?
     {
-        let modelsDevPricing = self.modelsDevLookup(
+        let tokens = ClaudeCostTokens(
+            input: inputTokens,
+            cacheRead: cacheReadInputTokens,
+            cacheCreation: cacheCreationInputTokens,
+            cacheCreation1h: cacheCreationInputTokens1h,
+            output: outputTokens)
+        let key = self.normalizeClaudeModel(model)
+        if let pricingDate,
+           let historicalPricing = self.claudeHistoricalLongContext[key],
+           let currentPricing = self.claude[key]
+        {
+            return self.claudeCostUSD(
+                pricing: pricingDate < self.claudeFullContextStandardPricingCutoff
+                    ? historicalPricing
+                    : currentPricing,
+                tokens: tokens)
+        }
+        if let lookup = self.modelsDevLookup(
             providerID: self.claudeModelsDevProviderID,
             model: model,
             catalog: modelsDevCatalog,
-            cacheRoot: modelsDevCacheRoot)?.pricing
-        let builtInPricing = self.claude[self.normalizeClaudeModel(model)]
-
-        // Prefer the live models.dev catalog, but only when it carries a usable (non-zero) price.
-        // A catalog entry that lists zero input/output cost (e.g. a model still awaiting pricing)
-        // would otherwise mask the audited built-in price and surface as $0.00.
-        if let modelsDevPricing,
-           modelsDevPricing.inputCostPerToken > 0 || modelsDevPricing.outputCostPerToken > 0
+            cacheRoot: modelsDevCacheRoot)
         {
             return self.claudeCostUSD(
-                pricing: modelsDevPricing,
-                inputTokens: inputTokens,
-                cacheReadInputTokens: cacheReadInputTokens,
-                cacheCreationInputTokens: cacheCreationInputTokens,
-                outputTokens: outputTokens)
+                pricing: lookup.pricing,
+                tokens: tokens)
         }
 
-        if let builtInPricing {
-            return self.claudeCostUSD(
-                pricing: builtInPricing,
-                inputTokens: inputTokens,
-                cacheReadInputTokens: cacheReadInputTokens,
-                cacheCreationInputTokens: cacheCreationInputTokens,
-                outputTokens: outputTokens)
-        }
-
-        // Future-proofing: a brand-new Claude model (e.g. a later claude-opus-4-N) may not yet be
-        // in the built-in table or models.dev. Estimate from the model family's representative
-        // pricing instead of giving up and showing no cost.
-        if let familyPricing = self.claudeFamilyFallbackPricing(model) {
-            return self.claudeCostUSD(
-                pricing: familyPricing,
-                inputTokens: inputTokens,
-                cacheReadInputTokens: cacheReadInputTokens,
-                cacheCreationInputTokens: cacheCreationInputTokens,
-                outputTokens: outputTokens)
-        }
-
-        // No built-in or family match: fall back to whatever models.dev provided (possibly a
-        // genuinely free model priced at zero) so catalog-known models still resolve.
-        if let modelsDevPricing {
-            return self.claudeCostUSD(
-                pricing: modelsDevPricing,
-                inputTokens: inputTokens,
-                cacheReadInputTokens: cacheReadInputTokens,
-                cacheCreationInputTokens: cacheCreationInputTokens,
-                outputTokens: outputTokens)
-        }
-
-        return nil
-    }
-
-    /// Anthropic model codenames that can appear without a `claude-` prefix (e.g. internal/preview
-    /// names). Used to recognize and price these models as Anthropic.
-    static let anthropicModelCodenames: [String] = ["fable", "mythos"]
-
-    /// Representative pricing for a Claude/Anthropic model, used only when an exact price is
-    /// unavailable. Matches any Opus / Sonnet / Haiku variant — regardless of generation
-    /// (`claude-3-opus`, `claude-opus-4-8`, the dotted `claude-opus-4.8`, a future `claude-opus-5`,
-    /// …) or date suffix. Any other Anthropic model (incl. codenames like `fable` / `mythos`) is
-    /// estimated at the mid-tier Sonnet rate so it still reports a cost instead of being dropped.
-    /// Exact table entries and models.dev still take precedence for precise pricing.
-    private static func claudeFamilyFallbackPricing(_ rawModel: String) -> ClaudePricing? {
-        let model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let isAnthropic = model.contains("claude") || model.contains("anthropic")
-            || Self.anthropicModelCodenames.contains { model.contains($0) }
-        guard isAnthropic else { return nil }
-
-        if model.contains("opus") {
-            return self.claude["claude-opus-4-7"]
-        }
-        if model.contains("sonnet") {
-            return self.claude["claude-sonnet-4-6"]
-        }
-        if model.contains("haiku") {
-            return self.claude["claude-haiku-4-5"]
-        }
-        // Other Anthropic models (e.g. fable / mythos) — estimate at the mid-tier Sonnet rate
-        // until exact pricing is known.
-        return self.claude["claude-sonnet-4-6"]
+        guard let pricing = self.claude[key] else { return nil }
+        return self.claudeCostUSD(
+            pricing: pricing,
+            tokens: tokens)
     }
 
     private static func claudeCostUSD(
         pricing: ClaudePricing,
-        inputTokens: Int,
-        cacheReadInputTokens: Int,
-        cacheCreationInputTokens: Int,
-        outputTokens: Int) -> Double
+        tokens: ClaudeCostTokens) -> Double
     {
-        func tiered(_ tokens: Int, base: Double, above: Double?, threshold: Int?) -> Double {
-            guard let threshold, let above else { return Double(tokens) * base }
-            let below = min(tokens, threshold)
-            let over = max(tokens - threshold, 0)
-            return Double(below) * base + Double(over) * above
-        }
+        let input = max(0, tokens.input)
+        let cacheRead = max(0, tokens.cacheRead)
+        let cacheCreationTotal = max(0, tokens.cacheCreation)
+        let cacheCreation1h = min(max(0, tokens.cacheCreation1h), cacheCreationTotal)
+        let cacheCreation5m = cacheCreationTotal - cacheCreation1h
+        let usesLongContextRates = pricing.thresholdTokens.map {
+            input + cacheRead + cacheCreationTotal > $0
+        } ?? false
+        let inputRate = usesLongContextRates
+            ? pricing.inputCostPerTokenAboveThreshold ?? pricing.inputCostPerToken
+            : pricing.inputCostPerToken
+        let cacheReadRate = usesLongContextRates
+            ? pricing.cacheReadInputCostPerTokenAboveThreshold ?? pricing.cacheReadInputCostPerToken
+            : pricing.cacheReadInputCostPerToken
+        let cacheCreation5mRate = usesLongContextRates
+            ? pricing.cacheCreationInputCostPerTokenAboveThreshold ?? pricing.cacheCreationInputCostPerToken
+            : pricing.cacheCreationInputCostPerToken
+        let outputRate = usesLongContextRates
+            ? pricing.outputCostPerTokenAboveThreshold ?? pricing.outputCostPerToken
+            : pricing.outputCostPerToken
 
-        return tiered(
-            max(0, inputTokens),
-            base: pricing.inputCostPerToken,
-            above: pricing.inputCostPerTokenAboveThreshold,
-            threshold: pricing.thresholdTokens)
-            + tiered(
-                max(0, cacheReadInputTokens),
-                base: pricing.cacheReadInputCostPerToken,
-                above: pricing.cacheReadInputCostPerTokenAboveThreshold,
-                threshold: pricing.thresholdTokens)
-            + tiered(
-                max(0, cacheCreationInputTokens),
-                base: pricing.cacheCreationInputCostPerToken,
-                above: pricing.cacheCreationInputCostPerTokenAboveThreshold,
-                threshold: pricing.thresholdTokens)
-            + tiered(
-                max(0, outputTokens),
-                base: pricing.outputCostPerToken,
-                above: pricing.outputCostPerTokenAboveThreshold,
-                threshold: pricing.thresholdTokens)
+        return Double(input) * inputRate
+            + Double(cacheRead) * cacheReadRate
+            + Double(cacheCreation5m) * cacheCreation5mRate
+            + Double(cacheCreation1h) * inputRate * 2
+            + Double(max(0, tokens.output)) * outputRate
     }
 
     private static func claudeCostUSD(
         pricing: ModelsDevPricingInfo,
-        inputTokens: Int,
-        cacheReadInputTokens: Int,
-        cacheCreationInputTokens: Int,
-        outputTokens: Int) -> Double
+        tokens: ClaudeCostTokens) -> Double
     {
         self.claudeCostUSD(
             pricing: ClaudePricing(
@@ -658,10 +643,7 @@ enum CostUsagePricing {
                 outputCostPerTokenAboveThreshold: pricing.outputCostPerTokenAboveThreshold,
                 cacheCreationInputCostPerTokenAboveThreshold: pricing.cacheCreationInputCostPerTokenAboveThreshold,
                 cacheReadInputCostPerTokenAboveThreshold: pricing.cacheReadInputCostPerTokenAboveThreshold),
-            inputTokens: inputTokens,
-            cacheReadInputTokens: cacheReadInputTokens,
-            cacheCreationInputTokens: cacheCreationInputTokens,
-            outputTokens: outputTokens)
+            tokens: tokens)
     }
 
     static func modelsDevCatalog(now: Date = Date(), cacheRoot: URL? = nil) -> ModelsDevCatalog? {

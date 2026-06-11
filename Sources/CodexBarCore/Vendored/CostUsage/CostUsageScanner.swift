@@ -7,6 +7,8 @@ import Foundation
 
 // swiftlint:disable type_body_length file_length
 enum CostUsageScanner {
+    typealias CancellationCheck = () throws -> Void
+
     static let log = CodexBarLog.logger(LogCategories.tokenCost)
     static let codexActiveSessionLookbackDays = 30
     static let costScale = 1_000_000_000.0
@@ -347,11 +349,13 @@ enum CostUsageScanner {
         let sessionId: String?
         let messageId: String?
         let requestId: String?
+        let timestampUnixMs: Int64?
         let isSidechain: Bool
         let pathRole: ClaudePathRole
         let input: Int
         let cacheRead: Int
         let cacheCreate: Int
+        let cacheCreate1h: Int?
         let output: Int
         let costNanos: Int
         let costPriced: Bool?
@@ -371,13 +375,13 @@ enum CostUsageScanner {
         case .codex:
             return self.loadCodexDaily(range: range, now: now, options: options)
         case .claude:
-            return self.loadClaudeDaily(provider: .claude, range: range, now: now, options: options)
+            return (try? self.loadClaudeDaily(provider: .claude, range: range, now: now, options: options)) ?? emptyReport
         case .vertexai:
             var filtered = options
             if filtered.claudeLogProviderFilter == .all {
                 filtered.claudeLogProviderFilter = .vertexAIOnly
             }
-            return self.loadClaudeDaily(provider: .vertexai, range: range, now: now, options: filtered)
+            return (try? self.loadClaudeDaily(provider: .vertexai, range: range, now: now, options: filtered)) ?? emptyReport
         case .openai, .azureopenai, .zai, .gemini, .antigravity, .cursor, .opencode, .opencodego, .alibaba,
              .alibabatokenplan, .factory,
              .copilot, .minimax, .manus, .kilo, .kiro, .kimi, .kimik2, .moonshot, .augment, .jetbrains, .amp, .ollama,
