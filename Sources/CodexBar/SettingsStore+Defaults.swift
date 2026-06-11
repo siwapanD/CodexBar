@@ -353,6 +353,15 @@ extension SettingsStore {
         }
     }
 
+    var providerColorOverridesRaw: [String: String] {
+        get { self.defaultsState.providerColorOverridesRaw }
+        set {
+            self.defaultsState.providerColorOverridesRaw = newValue
+            self.userDefaults.set(newValue, forKey: "providerColorOverrides")
+            self.syncProviderColorOverrides()
+        }
+    }
+
     var claudeOAuthKeychainPromptMode: ClaudeOAuthKeychainPromptMode {
         get {
             let raw = self.defaultsState.claudeOAuthKeychainPromptModeRaw

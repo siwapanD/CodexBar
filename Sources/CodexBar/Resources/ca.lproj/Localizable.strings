@@ -478,6 +478,10 @@
 "show_all_providers_subtitle" = "La barra de menús mostra la icona i el percentatge de cada proveïdor activat en una sola tira.";
 "brand_icon_color_title" = "Usa colors de marca a la barra de menús";
 "brand_icon_color_subtitle" = "Mostra la icona de cada proveïdor a la barra de menús amb el seu color de marca en lloc de monocrom.";
+"provider_appearance_section" = "Aparença";
+"provider_color_title" = "Color de la icona";
+"provider_color_subtitle" = "El color utilitzat per a aquest proveïdor a la barra de menús, el commutador i els gràfics.";
+"provider_color_reset" = "Restableix";
 "menu_bar_shows_percent_title" = "La barra de menús mostra el percentatge";
 "menu_bar_shows_percent_subtitle" = "Substitueix les barres de bestioles per icones de marca del proveïdor i un percentatge.";
 "display_mode_title" = "Mode de visualització";

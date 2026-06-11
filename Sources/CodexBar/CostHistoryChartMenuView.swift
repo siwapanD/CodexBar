@@ -288,8 +288,7 @@ struct CostHistoryChartMenuView: View {
     }
 
     private static func barColor(for provider: UsageProvider) -> Color {
-        let color = ProviderDescriptorRegistry.descriptor(for: provider).branding.color
-        return Color(red: color.red, green: color.green, blue: color.blue)
+        ProviderBrandColorResolver.shared.color(for: provider).swiftUIColor
     }
 
     private static func dateFromDayKey(_ key: String) -> Date? {

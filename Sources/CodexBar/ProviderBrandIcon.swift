@@ -36,8 +36,7 @@ enum ProviderBrandIcon {
     /// for use when the user opts into colorful menu bar icons.
     static func coloredImage(for provider: UsageProvider) -> NSImage? {
         guard let base = self.image(for: provider) else { return nil }
-        let brand = ProviderDescriptorRegistry.descriptor(for: provider).branding.color
-        let color = NSColor(deviceRed: brand.red, green: brand.green, blue: brand.blue, alpha: 1)
+        let color = ProviderBrandColorResolver.shared.color(for: provider).nsColor
         return base.codexBarTinted(with: color)
     }
 }

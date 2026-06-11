@@ -478,6 +478,10 @@
 "show_all_providers_subtitle" = "Menu bar shows every enabled provider's icon and percentage in one strip.";
 "brand_icon_color_title" = "Use brand colors in menu bar";
 "brand_icon_color_subtitle" = "Show each provider's menu bar icon in its brand color instead of monochrome.";
+"provider_appearance_section" = "Appearance";
+"provider_color_title" = "Icon color";
+"provider_color_subtitle" = "The color used for this provider across the menu bar, switcher, and charts.";
+"provider_color_reset" = "Reset";
 "menu_bar_shows_percent_title" = "Menu bar shows percent";
 "menu_bar_shows_percent_subtitle" = "Replace critter bars with provider branding icons and a percentage.";
 "display_mode_title" = "Display mode";

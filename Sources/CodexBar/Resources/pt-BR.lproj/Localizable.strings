@@ -478,6 +478,10 @@
 "show_all_providers_subtitle" = "A barra de menus mostra o ícone e a porcentagem de cada provedor ativado em uma única faixa.";
 "brand_icon_color_title" = "Usar cores da marca na barra de menus";
 "brand_icon_color_subtitle" = "Mostra o ícone de cada provedor na barra de menus na cor da marca em vez de monocromático.";
+"provider_appearance_section" = "Aparência";
+"provider_color_title" = "Cor do ícone";
+"provider_color_subtitle" = "A cor usada para este provedor na barra de menus, no seletor e nos gráficos.";
+"provider_color_reset" = "Redefinir";
 "menu_bar_shows_percent_title" = "Barra de menus mostra porcentagem";
 "menu_bar_shows_percent_subtitle" = "Substitui barras de bichinhos por ícones da marca do provedor e uma porcentagem.";
 "display_mode_title" = "Modo de exibição";

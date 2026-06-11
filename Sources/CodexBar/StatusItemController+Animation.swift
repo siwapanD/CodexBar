@@ -358,6 +358,7 @@ extension StatusItemController {
                 "warningFlash=\(warningFlash ? "1" : "0")",
                 "anim=\(needsAnimation ? "1" : "0")",
                 "color=\(useColorBrand ? "1" : "0")",
+                "brandColor=\(useColorBrand ? ProviderBrandColorResolver.shared.color(for: primaryProvider).hexString : "")",
             ].joined(separator: "|")
             if self.shouldSkipMergedIconRender(signature) {
                 self.noteIconPerfRender(skipped: true)
@@ -476,7 +477,10 @@ extension StatusItemController {
             let snapshot = self.store.snapshot(for: provider)
             let text = self.menuBarDisplayText(for: provider, snapshot: snapshot)
             entries.append(MergedBrandPercentIcon.Entry(brand: brand, text: text))
-            signatureParts.append("\(provider.rawValue)=\(text ?? "nil")")
+            let colorTag = useColor
+                ? ProviderBrandColorResolver.shared.color(for: provider).hexString
+                : ""
+            signatureParts.append("\(provider.rawValue)=\(text ?? "nil"):\(colorTag)")
         }
         guard entries.count > 1 else { return nil }
 
@@ -532,6 +536,7 @@ extension StatusItemController {
                 "text=\(displayText ?? "nil")",
                 "warningFlash=\(warningFlash ? "1" : "0")",
                 "color=\(useColorBrand ? "1" : "0")",
+                "brandColor=\(useColorBrand ? ProviderBrandColorResolver.shared.color(for: provider).hexString : "")",
             ].joined(separator: "|")
             if self.shouldSkipProviderIconRender(provider: provider, signature: signature) {
                 self.noteIconPerfRender(skipped: true)

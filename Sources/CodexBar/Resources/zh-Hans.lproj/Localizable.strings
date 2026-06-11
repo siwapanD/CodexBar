@@ -478,6 +478,10 @@
 "show_all_providers_subtitle" = "菜单栏在一条中显示每个已启用提供商的图标和百分比。";
 "brand_icon_color_title" = "在菜单栏使用品牌颜色";
 "brand_icon_color_subtitle" = "在菜单栏以各提供商的品牌颜色显示图标，而非单色。";
+"provider_appearance_section" = "外观";
+"provider_color_title" = "图标颜色";
+"provider_color_subtitle" = "此提供商在菜单栏、切换器和图表中使用的颜色。";
+"provider_color_reset" = "重置";
 "menu_bar_shows_percent_title" = "菜单栏显示百分比";
 "menu_bar_shows_percent_subtitle" = "将小动物进度条替换为提供商品牌图标和百分比。";
 "display_mode_title" = "显示模式";
