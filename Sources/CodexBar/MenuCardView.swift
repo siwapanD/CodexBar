@@ -674,6 +674,9 @@ struct UsageMenuCardExtraUsageSectionView: View {
 // MARK: - Model factory
 
 extension UsageMenuCardView.Model {
+    /// Extra Claude quota lane hidden from the card (the "Designs" lane).
+    static let hiddenExtraRateWindowID = "claude-design"
+
     struct Input {
         let provider: UsageProvider
         let metadata: ProviderMetadata
@@ -1096,7 +1099,10 @@ extension UsageMenuCardView.Model {
                     showUsed: input.usageBarsShowUsed)))
         }
         if let extraRateWindows = snapshot.extraRateWindows {
-            metrics.append(contentsOf: extraRateWindows.map { namedWindow in
+            // The Claude "Designs" quota lane is intentionally hidden from the card.
+            metrics.append(contentsOf: extraRateWindows
+                .filter { $0.id != Self.hiddenExtraRateWindowID }
+                .map { namedWindow in
                 Metric(
                     id: namedWindow.id,
                     title: namedWindow.title,

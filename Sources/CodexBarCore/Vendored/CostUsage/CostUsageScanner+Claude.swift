@@ -200,20 +200,22 @@ extension CostUsageScanner {
     }
 
     /// Whether a logged model belongs to the Anthropic Claude family. Handles direct Anthropic
-    /// names (`claude-opus-4-6`), Vertex AI (`claude-opus-4-6@20260205`), and Bedrock-style IDs
-    /// (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`). Non-Claude models routed through Claude
-    /// Code (`qwen3.5:9b`, `gpt-4o`, `deepseek-chat`, …) return false.
+    /// names (`claude-opus-4-6`), Vertex AI (`claude-opus-4-6@20260205`), Bedrock-style IDs
+    /// (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`), `anthropic/...`-prefixed names, and
+    /// internal codenames (`fable`, `mythos`). Non-Anthropic models routed through Claude Code
+    /// (`qwen3.5:9b`, `gpt-4o`, `deepseek-chat`, …) return false.
     static func isClaudeFamilyModel(_ rawModel: String) -> Bool {
-        var model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if model.isEmpty { return false }
-        // Strip a leading provider segment, e.g. "anthropic/" or "anthropic." or bedrock's
-        // "us.anthropic." / "eu.anthropic." prefixes.
-        if let range = model.range(of: "anthropic.") {
-            model = String(model[range.upperBound...])
-        } else if model.hasPrefix("anthropic/") {
-            model = String(model.dropFirst("anthropic/".count))
+        let lowered = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if lowered.isEmpty { return false }
+        // An explicit Anthropic provider segment is a definitive signal.
+        if lowered.hasPrefix("anthropic/") || lowered.hasPrefix("anthropic-")
+            || lowered.contains("anthropic.")
+        {
+            return true
         }
-        return model.hasPrefix("claude")
+        if lowered.contains("claude") { return true }
+        // Known Anthropic model codenames that may appear without a "claude" prefix.
+        return CostUsagePricing.anthropicModelCodenames.contains { lowered.contains($0) }
     }
 
     private static func claudeCanonicalRowKey(_ row: ClaudeUsageRow) -> String? {

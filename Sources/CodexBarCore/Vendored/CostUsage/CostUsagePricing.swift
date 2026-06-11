@@ -574,14 +574,22 @@ enum CostUsagePricing {
         return nil
     }
 
-    /// Representative pricing for a Claude model family, used only when an exact price is
-    /// unavailable. Matches any Claude Opus / Sonnet / Haiku variant — regardless of generation
-    /// (`claude-3-opus`, `claude-opus-4-8`, a future `claude-opus-5`, …) or date suffix — so every
-    /// Opus and Sonnet model is estimated rather than dropped. Exact table entries still take
-    /// precedence for precise per-model pricing.
+    /// Anthropic model codenames that can appear without a `claude-` prefix (e.g. internal/preview
+    /// names). Used to recognize and price these models as Anthropic.
+    static let anthropicModelCodenames: [String] = ["fable", "mythos"]
+
+    /// Representative pricing for a Claude/Anthropic model, used only when an exact price is
+    /// unavailable. Matches any Opus / Sonnet / Haiku variant — regardless of generation
+    /// (`claude-3-opus`, `claude-opus-4-8`, the dotted `claude-opus-4.8`, a future `claude-opus-5`,
+    /// …) or date suffix. Any other Anthropic model (incl. codenames like `fable` / `mythos`) is
+    /// estimated at the mid-tier Sonnet rate so it still reports a cost instead of being dropped.
+    /// Exact table entries and models.dev still take precedence for precise pricing.
     private static func claudeFamilyFallbackPricing(_ rawModel: String) -> ClaudePricing? {
         let model = rawModel.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard model.contains("claude") else { return nil }
+        let isAnthropic = model.contains("claude") || model.contains("anthropic")
+            || Self.anthropicModelCodenames.contains { model.contains($0) }
+        guard isAnthropic else { return nil }
+
         if model.contains("opus") {
             return self.claude["claude-opus-4-7"]
         }
@@ -591,7 +599,9 @@ enum CostUsagePricing {
         if model.contains("haiku") {
             return self.claude["claude-haiku-4-5"]
         }
-        return nil
+        // Other Anthropic models (e.g. fable / mythos) — estimate at the mid-tier Sonnet rate
+        // until exact pricing is known.
+        return self.claude["claude-sonnet-4-6"]
     }
 
     private static func claudeCostUSD(

@@ -415,6 +415,29 @@ struct CostUsagePricingTests {
     }
 
     @Test
+    func `claude cost prices dotted opus and codename models`() {
+        // Dotted Opus variant -> Opus family rate.
+        let opusDotted = CostUsagePricing.claudeCostUSD(
+            model: "anthropic/claude-opus-4.8",
+            inputTokens: 10,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+            outputTokens: 5)
+        #expect(opusDotted == (10.0 * 5e-6) + (5.0 * 2.5e-5))
+
+        // Codename / non-standard Anthropic models -> mid-tier Sonnet estimate (not nil).
+        for model in ["anthropic/claude-fable-5", "Mythos", "claude-fable-5"] {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            #expect(cost == (10.0 * 3e-6) + (5.0 * 1.5e-5))
+        }
+    }
+
+    @Test
     func `claude cost returns nil for unknown models`() {
         let cost = CostUsagePricing.claudeCostUSD(
             model: "glm-4.6",
