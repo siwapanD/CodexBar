@@ -361,22 +361,31 @@ struct CostUsagePricingTests {
     }
 
     @Test
+<<<<<<< HEAD
     func `claude cost supports opus48`() throws {
         // Point at a fresh, empty cache root so the models.dev lookup misses and this
         // exercises the built-in fallback table specifically — not a local cache hit.
         let emptyCacheRoot = try Self.cacheRoot()
+=======
+    func `claude cost supports opus48`() {
+>>>>>>> origin/icon-bar
         let cost = CostUsagePricing.claudeCostUSD(
             model: "claude-opus-4-8",
             inputTokens: 10,
             cacheReadInputTokens: 0,
             cacheCreationInputTokens: 0,
+<<<<<<< HEAD
             outputTokens: 5,
             modelsDevCacheRoot: emptyCacheRoot)
+=======
+            outputTokens: 5)
+>>>>>>> origin/icon-bar
         let expected = (10.0 * 5e-6) + (5.0 * 2.5e-5)
         #expect(cost == expected)
     }
 
     @Test
+<<<<<<< HEAD
     func `claude cost supports fable5 bundled fallback`() throws {
         let emptyCacheRoot = try Self.cacheRoot()
         let cost = CostUsagePricing.claudeCostUSD(
@@ -387,10 +396,23 @@ struct CostUsagePricingTests {
             outputTokens: 5,
             modelsDevCacheRoot: emptyCacheRoot)
         let expected = (100.0 * 1e-5) + (20.0 * 1e-6) + (10.0 * 1.25e-5) + (5.0 * 5e-5)
+=======
+    func `claude cost estimates unknown future opus variant via family fallback`() {
+        // A brand-new opus variant not yet in the table should still estimate via the opus family
+        // price rather than returning nil (which would show no cost).
+        let cost = CostUsagePricing.claudeCostUSD(
+            model: "claude-opus-4-9-20270101",
+            inputTokens: 10,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+            outputTokens: 5)
+        let expected = (10.0 * 5e-6) + (5.0 * 2.5e-5)
+>>>>>>> origin/icon-bar
         #expect(cost == expected)
     }
 
     @Test
+<<<<<<< HEAD
     func `claude cost preserves historical sonnet46 long context pricing`() throws {
         let emptyCacheRoot = try Self.cacheRoot()
         let historical = CostUsagePricing.claudeCostUSD(
@@ -521,6 +543,56 @@ struct CostUsagePricingTests {
             outputTokens: 0,
             modelsDevCacheRoot: emptyCacheRoot)
         #expect(cost == 240_000.0 * 3.75e-6)
+=======
+    func `claude family fallback covers all opus and sonnet generations`() {
+        // Use future/fictional variants that are absent from the built-in table and models.dev so
+        // the family fallback is exercised deterministically.
+        let opusModels = ["claude-opus-5", "claude-opus-6-20280101", "anthropic/claude-opus-4-9"]
+        for model in opusModels {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            #expect(cost == (10.0 * 5e-6) + (5.0 * 2.5e-5))
+        }
+
+        let sonnetModels = ["claude-sonnet-5", "claude-sonnet-6-20280101", "anthropic/claude-sonnet-4-9"]
+        for model in sonnetModels {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            // Below the 200k threshold, so base sonnet rates apply.
+            #expect(cost == (10.0 * 3e-6) + (5.0 * 1.5e-5))
+        }
+    }
+
+    @Test
+    func `claude cost prices dotted opus and codename models`() {
+        // Dotted Opus variant -> Opus family rate.
+        let opusDotted = CostUsagePricing.claudeCostUSD(
+            model: "anthropic/claude-opus-4.8",
+            inputTokens: 10,
+            cacheReadInputTokens: 0,
+            cacheCreationInputTokens: 0,
+            outputTokens: 5)
+        #expect(opusDotted == (10.0 * 5e-6) + (5.0 * 2.5e-5))
+
+        // Codename / non-standard Anthropic models -> mid-tier Sonnet estimate (not nil).
+        for model in ["anthropic/claude-fable-5", "Mythos", "claude-fable-5"] {
+            let cost = CostUsagePricing.claudeCostUSD(
+                model: model,
+                inputTokens: 10,
+                cacheReadInputTokens: 0,
+                cacheCreationInputTokens: 0,
+                outputTokens: 5)
+            #expect(cost == (10.0 * 3e-6) + (5.0 * 1.5e-5))
+        }
+>>>>>>> origin/icon-bar
     }
 
     @Test

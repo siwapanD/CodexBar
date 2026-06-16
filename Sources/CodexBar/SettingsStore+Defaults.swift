@@ -345,6 +345,31 @@ extension SettingsStore {
         }
     }
 
+    var menuBarShowsAllProviders: Bool {
+        get { self.defaultsState.menuBarShowsAllProviders }
+        set {
+            self.defaultsState.menuBarShowsAllProviders = newValue
+            self.userDefaults.set(newValue, forKey: "menuBarShowsAllProviders")
+        }
+    }
+
+    var menuBarBrandIconsUseColor: Bool {
+        get { self.defaultsState.menuBarBrandIconsUseColor }
+        set {
+            self.defaultsState.menuBarBrandIconsUseColor = newValue
+            self.userDefaults.set(newValue, forKey: "menuBarBrandIconsUseColor")
+        }
+    }
+
+    var providerColorOverridesRaw: [String: String] {
+        get { self.defaultsState.providerColorOverridesRaw }
+        set {
+            self.defaultsState.providerColorOverridesRaw = newValue
+            self.userDefaults.set(newValue, forKey: "providerColorOverrides")
+            self.syncProviderColorOverrides()
+        }
+    }
+
     var claudeOAuthKeychainPromptMode: ClaudeOAuthKeychainPromptMode {
         get {
             let raw = self.defaultsState.claudeOAuthKeychainPromptModeRaw

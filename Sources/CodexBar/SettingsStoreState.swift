@@ -37,6 +37,9 @@ struct SettingsDefaultsState {
     var randomBlinkEnabled: Bool
     var confettiOnWeeklyLimitResetsEnabled: Bool
     var menuBarShowsHighestUsage: Bool
+    var menuBarShowsAllProviders: Bool
+    var menuBarBrandIconsUseColor: Bool
+    var providerColorOverridesRaw: [String: String]
     var claudeOAuthKeychainPromptModeRaw: String?
     var claudeOAuthKeychainReadStrategyRaw: String?
     var claudeWebExtrasEnabledRaw: Bool

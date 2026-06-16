@@ -178,8 +178,7 @@ struct StorageBreakdownMenuView: View {
     }
 
     private var providerColor: Color {
-        let color = ProviderDescriptorRegistry.descriptor(for: self.footprint.provider).branding.color
-        return Color(red: color.red, green: color.green, blue: color.blue)
+        ProviderBrandColorResolver.shared.color(for: self.footprint.provider).swiftUIColor
     }
 }
 

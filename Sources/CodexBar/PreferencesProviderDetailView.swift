@@ -158,6 +158,8 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
 
                 ProviderQuotaWarningSettingsView(provider: self.provider, settings: self.store.settings)
 
+                ProviderColorSettingsView(provider: self.provider, settings: self.store.settings)
+
                 if !self.settingsToggles.isEmpty {
                     ProviderSettingsSection(title: L("Options")) {
                         ForEach(self.settingsToggles) { toggle in

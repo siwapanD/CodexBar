@@ -841,4 +841,17 @@ extension CostUsageScanner {
 
         return CostUsageDailyReport(data: entries, summary: summary)
     }
+
+    static func isClaudeFamilyModel(_ model: String) -> Bool {
+        let lowered = model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        // An explicit Anthropic provider segment is a definitive signal.
+        if lowered.hasPrefix("anthropic/") || lowered.hasPrefix("anthropic-")
+            || lowered.contains("anthropic.")
+        {
+            return true
+        }
+        if lowered.contains("claude") { return true }
+        // Known Anthropic model codenames that may appear without a "claude" prefix.
+        return lowered.contains("fable") || lowered.contains("mythos")
+    }
 }
