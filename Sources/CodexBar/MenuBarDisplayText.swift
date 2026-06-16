@@ -16,6 +16,27 @@ enum MenuBarDisplayText {
         return "\(sign)\(deltaValue)%"
     }
 
+    static func resetTimeText(
+        window: RateWindow?,
+        resetTimeDisplayStyle: ResetTimeDisplayStyle = .countdown,
+        now: Date = .init()) -> String?
+    {
+        guard let window else { return nil }
+        if let resetsAt = window.resetsAt {
+            let description = switch resetTimeDisplayStyle {
+            case .countdown:
+                UsageFormatter.resetCountdownDescription(from: resetsAt, now: now)
+            case .absolute:
+                UsageFormatter.resetDescription(from: resetsAt, now: now)
+            }
+            return "↻ \(description)"
+        }
+        if let resetDescription = self.resetMetadataText(window.resetDescription) {
+            return "↻ \(resetDescription)"
+        }
+        return nil
+    }
+
     static func displayText(
         mode: MenuBarDisplayMode,
         percentWindow: RateWindow?,
@@ -39,19 +60,25 @@ enum MenuBarDisplayText {
             return "\(percent) · \(paceText)"
         case .resetTime:
             guard let percentWindow else { return nil }
-            if let resetsAt = percentWindow.resetsAt {
-                let description = switch resetTimeDisplayStyle {
-                case .countdown:
-                    UsageFormatter.resetCountdownDescription(from: resetsAt, now: now)
-                case .absolute:
-                    UsageFormatter.resetDescription(from: resetsAt, now: now)
-                }
-                return "↻ \(description)"
-            }
-            if let resetDescription = self.resetMetadataText(percentWindow.resetDescription) {
-                return "↻ \(resetDescription)"
+            if let resetText = self.resetTimeText(
+                window: percentWindow,
+                resetTimeDisplayStyle: resetTimeDisplayStyle,
+                now: now)
+            {
+                return resetText
             }
             return self.percentText(window: percentWindow, showUsed: showUsed)
+        case .percentResetTime:
+            guard let percent = percentText(window: percentWindow, showUsed: showUsed) else { return nil }
+            // Fall back to percent-only when reset time metadata is unavailable.
+            guard let resetText = Self.resetTimeText(
+                window: percentWindow,
+                resetTimeDisplayStyle: resetTimeDisplayStyle,
+                now: now)
+            else {
+                return percent
+            }
+            return "\(percent) · \(resetText)"
         }
     }
 

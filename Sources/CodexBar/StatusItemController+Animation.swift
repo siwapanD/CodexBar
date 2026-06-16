@@ -833,7 +833,7 @@ extension StatusItemController {
             pace = paceWindow.flatMap { window in
                 self.store.weeklyPace(provider: provider, window: window, now: now)
             }
-        case .resetTime:
+        case .resetTime, .percentResetTime:
             return MenuBarDisplayText.displayText(
                 mode: mode,
                 percentWindow: percentWindow,
