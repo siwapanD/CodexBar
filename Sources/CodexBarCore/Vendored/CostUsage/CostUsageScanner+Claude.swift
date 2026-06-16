@@ -147,6 +147,10 @@ extension CostUsageScanner {
 
                         guard let message = obj["message"] as? [String: Any] else { return }
                         guard let model = message["model"] as? String else { return }
+                        // Claude Code can be routed to non-Anthropic models (e.g. local Ollama
+                        // models like "qwen3.5:9b"). Those entries land in the Claude logs but are
+                        // not Claude usage, so exclude them from the Claude provider's stats.
+                        guard Self.isClaudeFamilyModel(model) else { return }
                         guard let usage = message["usage"] as? [String: Any] else { return }
 
                         let input = max(0, toInt(usage["input_tokens"]))

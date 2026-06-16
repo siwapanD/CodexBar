@@ -414,7 +414,8 @@ extension UsageMenuCardView.Model {
         if input.provider == .copilot, !input.copilotBudgetExtrasEnabled {
             return []
         }
-        return extraRateWindows.map { namedWindow in
+        // The Claude "Designs" quota lane is intentionally hidden from the card.
+        return extraRateWindows.filter { $0.id != Self.hiddenExtraRateWindowID }.map { namedWindow in
             let paceDetail = Self.extraRateWindowPaceDetail(
                 provider: input.provider,
                 window: namedWindow.window,
