@@ -1146,8 +1146,7 @@ extension ProviderSwitcherView {
     {
         switch selection {
         case let .provider(provider):
-            let color = ProviderDescriptorRegistry.descriptor(for: provider).branding.color
-            return NSColor(deviceRed: color.red, green: color.green, blue: color.blue, alpha: 1)
+            return ProviderBrandColorResolver.shared.color(for: provider).nsColor
         case .overview:
             return NSColor.secondaryLabelColor
         }

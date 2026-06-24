@@ -10,6 +10,8 @@ enum CostUsageCacheIO {
         case .codex:
             8
         case .claude, .vertexai:
+            // Bumped to invalidate caches that predate the non-Claude model filter
+            // (e.g. local "qwen3.5:9b" routed through Claude Code).
             4
         default:
             1

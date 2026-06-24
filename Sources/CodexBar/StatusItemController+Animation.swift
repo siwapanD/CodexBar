@@ -295,7 +295,28 @@ extension StatusItemController {
 
         let statusIndicator = self.store.statusIndicator(for: primaryProvider)
         if showBrandPercent,
-           let brand = ProviderBrandIcon.image(for: primaryProvider)
+           self.shouldMergeIcons,
+           self.settings.menuBarShowsAllProviders,
+           !needsAnimation,
+           let stripResult = self.makeMergedAllProvidersStrip(statusIndicator: statusIndicator)
+        {
+            switch stripResult {
+            case .skip:
+                self.noteIconPerfRender(skipped: true)
+                return true
+            case let .image(image):
+                self.setButtonImage(image, for: button)
+                self.setButtonTitle(nil, for: button)
+                self.noteIconPerfRender(skipped: false)
+                return false
+            }
+        }
+
+        let useColorBrand = self.settings.menuBarBrandIconsUseColor
+        if showBrandPercent,
+           let brand = useColorBrand
+               ? ProviderBrandIcon.coloredImage(for: primaryProvider)
+               : ProviderBrandIcon.image(for: primaryProvider)
         {
             let displayText = self.menuBarDisplayText(for: primaryProvider, snapshot: snapshot)
             let signature = [
@@ -310,7 +331,12 @@ extension StatusItemController {
                 "text=\(displayText ?? "nil")",
                 "warningFlash=\(warningFlash ? "1" : "0")",
                 "anim=\(needsAnimation ? "1" : "0")",
+<<<<<<< HEAD
                 "hideCritters=\(self.settings.menuBarHidesCritters ? "1" : "0")",
+=======
+                "color=\(useColorBrand ? "1" : "0")",
+                "brandColor=\(useColorBrand ? ProviderBrandColorResolver.shared.color(for: primaryProvider).hexString : "")",
+>>>>>>> origin/dev-feat
             ].joined(separator: "|")
             if self.shouldSkipMergedIconRender(signature) {
                 // AppKit can lose button title/image-position state independently of the cached render signature.
@@ -426,6 +452,71 @@ extension StatusItemController {
         return false
     }
 
+    enum MergedAllProvidersStripResult {
+        case skip
+        case image(NSImage)
+    }
+
+    /// Builds a single horizontal strip showing every enabled provider's brand icon + percent.
+    /// Returns `nil` when fewer than two providers can render a brand glyph (caller falls back to
+    /// the single-provider brand display).
+    func makeMergedAllProvidersStrip(statusIndicator: ProviderStatusIndicator)
+        -> MergedAllProvidersStripResult?
+    {
+        let providers = self.store.enabledProvidersForDisplay()
+        guard providers.count > 1 else { return nil }
+
+        let useColor = self.settings.menuBarBrandIconsUseColor
+        let textColor = useColor ? self.menuBarLabelColor() : .black
+        var entries: [MergedBrandPercentIcon.Entry] = []
+        var signatureParts: [String] = [
+            "mode=mergedAll",
+            "status=\(statusIndicator.rawValue)",
+            "color=\(useColor ? "1" : "0")",
+            "appearance=\(useColor ? self.menuBarAppearanceName() : "")",
+        ]
+        for provider in providers {
+            let brand = useColor
+                ? ProviderBrandIcon.coloredImage(for: provider)
+                : ProviderBrandIcon.image(for: provider)
+            guard let brand else { continue }
+            let snapshot = self.store.snapshot(for: provider)
+            let text = self.menuBarDisplayText(for: provider, snapshot: snapshot)
+            entries.append(MergedBrandPercentIcon.Entry(brand: brand, text: text))
+            let colorTag = useColor
+                ? ProviderBrandColorResolver.shared.color(for: provider).hexString
+                : ""
+            signatureParts.append("\(provider.rawValue)=\(text ?? "nil"):\(colorTag)")
+        }
+        guard entries.count > 1 else { return nil }
+
+        let signature = signatureParts.joined(separator: "|")
+        if self.shouldSkipMergedIconRender(signature) {
+            return .skip
+        }
+        guard let image = MergedBrandPercentIcon.image(
+            entries: entries,
+            colored: useColor,
+            textColor: textColor)
+        else { return nil }
+        return .image(image)
+    }
+
+    /// Resolves `labelColor` for the menu bar's current appearance so colored (non-template)
+    /// strip text stays legible in both light and dark menu bars.
+    func menuBarLabelColor() -> NSColor {
+        let appearance = self.statusItem.button?.effectiveAppearance ?? NSApp.effectiveAppearance
+        var resolved = NSColor.labelColor
+        appearance.performAsCurrentDrawingAppearance {
+            resolved = NSColor.labelColor.usingColorSpace(.deviceRGB) ?? NSColor.labelColor
+        }
+        return resolved
+    }
+
+    func menuBarAppearanceName() -> String {
+        (self.statusItem.button?.effectiveAppearance ?? NSApp.effectiveAppearance).name.rawValue
+    }
+
     @discardableResult
     func applyIcon(for provider: UsageProvider, phase: Double?) -> Bool {
         guard let button = self.statusItems[provider]?.button else { return false }
@@ -437,8 +528,11 @@ extension StatusItemController {
         let style: IconStyle = self.store.style(for: provider)
         let warningFlash = self.quotaWarningFlashActive(provider: provider)
 
+        let useColorBrand = self.settings.menuBarBrandIconsUseColor
         if showBrandPercent,
-           let brand = ProviderBrandIcon.image(for: provider)
+           let brand = useColorBrand
+               ? ProviderBrandIcon.coloredImage(for: provider)
+               : ProviderBrandIcon.image(for: provider)
         {
             let displayText = self.menuBarDisplayText(for: provider, snapshot: snapshot)
             let signature = [
@@ -447,6 +541,8 @@ extension StatusItemController {
                 "style=\(String(describing: style))",
                 "text=\(displayText ?? "nil")",
                 "warningFlash=\(warningFlash ? "1" : "0")",
+                "color=\(useColorBrand ? "1" : "0")",
+                "brandColor=\(useColorBrand ? ProviderBrandColorResolver.shared.color(for: provider).hexString : "")",
             ].joined(separator: "|")
             if self.shouldSkipProviderIconRender(provider: provider, signature: signature) {
                 self.noteIconPerfRender(skipped: true)
@@ -753,7 +849,7 @@ extension StatusItemController {
             pace = paceWindow.flatMap { window in
                 self.store.weeklyPace(provider: provider, window: window, now: now)
             }
-        case .resetTime:
+        case .resetTime, .percentResetTime:
             return MenuBarDisplayText.displayText(
                 mode: mode,
                 percentWindow: percentWindow,

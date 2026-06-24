@@ -777,6 +777,9 @@ struct UsageMenuCardExtraUsageSectionView: View {
 // MARK: - Model factory
 
 extension UsageMenuCardView.Model {
+    /// Extra Claude quota lane hidden from the card (the "Designs" lane).
+    static let hiddenExtraRateWindowID = "claude-design"
+
     struct Input {
         let provider: UsageProvider
         let metadata: ProviderMetadata

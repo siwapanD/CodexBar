@@ -301,6 +301,7 @@ final class SettingsStore {
             self.defaultsState.openAIWebAccessEnabled = resolvedOpenAIWebAccessEnabled
         }
         KeychainAccessGate.isDisabled = self.debugDisableKeychainAccess
+        self.syncProviderColorOverrides()
     }
 }
 
@@ -382,6 +383,10 @@ extension SettingsStore {
         let confettiOnWeeklyLimitResetsEnabled = userDefaults.object(
             forKey: "confettiOnWeeklyLimitResetsEnabled") as? Bool ?? false
         let menuBarShowsHighestUsage = userDefaults.object(forKey: "menuBarShowsHighestUsage") as? Bool ?? false
+        let menuBarShowsAllProviders = userDefaults.object(forKey: "menuBarShowsAllProviders") as? Bool ?? false
+        let menuBarBrandIconsUseColor = userDefaults.object(forKey: "menuBarBrandIconsUseColor") as? Bool ?? false
+        let providerColorOverridesRaw = userDefaults.dictionary(
+            forKey: "providerColorOverrides") as? [String: String] ?? [:]
         let claudeOAuthKeychainPromptModeRaw = userDefaults.string(forKey: "claudeOAuthKeychainPromptMode")
         let claudeOAuthKeychainReadStrategyRaw = userDefaults.string(forKey: "claudeOAuthKeychainReadStrategy")
         let claudeWebExtrasEnabledRaw = userDefaults.object(forKey: "claudeWebExtrasEnabled") as? Bool ?? false
@@ -455,6 +460,9 @@ extension SettingsStore {
             randomBlinkEnabled: randomBlinkEnabled,
             confettiOnWeeklyLimitResetsEnabled: confettiOnWeeklyLimitResetsEnabled,
             menuBarShowsHighestUsage: menuBarShowsHighestUsage,
+            menuBarShowsAllProviders: menuBarShowsAllProviders,
+            menuBarBrandIconsUseColor: menuBarBrandIconsUseColor,
+            providerColorOverridesRaw: providerColorOverridesRaw,
             claudeOAuthKeychainPromptModeRaw: claudeOAuthKeychainPromptModeRaw,
             claudeOAuthKeychainReadStrategyRaw: claudeOAuthKeychainReadStrategyRaw,
             claudeWebExtrasEnabledRaw: claudeWebExtrasEnabledRaw,

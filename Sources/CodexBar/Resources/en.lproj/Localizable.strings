@@ -496,6 +496,14 @@
 "switcher_shows_icons_subtitle" = "Show provider icons in the switcher (otherwise show a weekly progress line).";
 "show_most_used_provider_title" = "Show most-used provider";
 "show_most_used_provider_subtitle" = "Menu bar auto-shows the provider closest to its rate limit.";
+"show_all_providers_title" = "Show all providers";
+"show_all_providers_subtitle" = "Menu bar shows every enabled provider's icon and percentage in one strip.";
+"brand_icon_color_title" = "Use brand colors in menu bar";
+"brand_icon_color_subtitle" = "Show each provider's menu bar icon in its brand color instead of monochrome.";
+"provider_appearance_section" = "Appearance";
+"provider_color_title" = "Icon color";
+"provider_color_subtitle" = "The color used for this provider across the menu bar, switcher, and charts.";
+"provider_color_reset" = "Reset";
 "menu_bar_shows_percent_title" = "Menu bar shows percent";
 "menu_bar_shows_percent_subtitle" = "Replace critter bars with provider branding icons and a percentage.";
 "hide_critters_title" = "Hide critters";
@@ -636,10 +644,12 @@
 "display_mode_pace" = "Pace";
 "display_mode_both" = "Both";
 "display_mode_reset_time" = "Reset time";
+"display_mode_percent_reset_time" = "Percent + Reset time";
 "display_mode_percent_desc" = "Show remaining/used percentage (e.g. 45%)";
 "display_mode_pace_desc" = "Show pace indicator (e.g. +5%)";
 "display_mode_both_desc" = "Show both percentage and pace (e.g. 45% · +5%)";
 "display_mode_reset_time_desc" = "Show the reset time for the selected metric (e.g. ↻ 3:56 PM)";
+"display_mode_percent_reset_time_desc" = "Show both percentage and reset time (e.g. 45% · ↻ 3:56 PM)";
 
 /* Provider status */
 "status_operational" = "Operational";

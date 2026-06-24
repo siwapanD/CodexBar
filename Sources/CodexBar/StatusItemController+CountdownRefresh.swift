@@ -9,7 +9,8 @@ extension StatusItemController {
         self.menuBarCountdownRefreshTask = nil
 
         guard self.settings.menuBarShowsBrandIconWithPercent,
-              self.settings.menuBarDisplayMode == .resetTime,
+              self.settings.menuBarDisplayMode == .resetTime
+              || self.settings.menuBarDisplayMode == .percentResetTime,
               self.settings.resetTimeDisplayStyle == .countdown
         else {
             return

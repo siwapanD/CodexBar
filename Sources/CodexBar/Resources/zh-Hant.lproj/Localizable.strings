@@ -494,6 +494,14 @@
 "switcher_shows_icons_subtitle" = "在切換器中顯示提供者圖示（否則顯示每週進度線）。";
 "show_most_used_provider_title" = "顯示使用量最高的提供者";
 "show_most_used_provider_subtitle" = "選單列會自動顯示最接近速率限制的提供者。";
+"show_all_providers_title" = "顯示所有提供者";
+"show_all_providers_subtitle" = "選單列在一條中顯示每個已啟用提供者的圖示和百分比。";
+"brand_icon_color_title" = "在選單列使用品牌顏色";
+"brand_icon_color_subtitle" = "在選單列以各提供者的品牌顏色顯示圖示，而非單色。";
+"provider_appearance_section" = "外觀";
+"provider_color_title" = "圖示顏色";
+"provider_color_subtitle" = "此提供者在選單列、切換器和圖表中使用的顏色。";
+"provider_color_reset" = "重設";
 "menu_bar_shows_percent_title" = "選單列顯示百分比";
 "menu_bar_shows_percent_subtitle" = "將小動物進度條替換為提供者品牌圖示和百分比。";
 "hide_critters_title" = "隱藏小動物";

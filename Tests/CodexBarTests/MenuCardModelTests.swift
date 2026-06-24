@@ -898,6 +898,7 @@ struct MenuCardModelTests {
             hidePersonalInfo: false,
             now: now))
 
+        // The "Designs" lane is intentionally hidden from the card.
         #expect(model.metrics.map(\.title) == ["Session", "Weekly", "Sonnet", "Daily Routines"])
     }
 
