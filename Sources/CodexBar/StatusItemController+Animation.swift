@@ -331,12 +331,9 @@ extension StatusItemController {
                 "text=\(displayText ?? "nil")",
                 "warningFlash=\(warningFlash ? "1" : "0")",
                 "anim=\(needsAnimation ? "1" : "0")",
-<<<<<<< HEAD
                 "hideCritters=\(self.settings.menuBarHidesCritters ? "1" : "0")",
-=======
                 "color=\(useColorBrand ? "1" : "0")",
                 "brandColor=\(useColorBrand ? ProviderBrandColorResolver.shared.color(for: primaryProvider).hexString : "")",
->>>>>>> origin/dev-feat
             ].joined(separator: "|")
             if self.shouldSkipMergedIconRender(signature) {
                 // AppKit can lose button title/image-position state independently of the cached render signature.

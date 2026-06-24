@@ -16,7 +16,6 @@ enum MenuBarDisplayText {
         return "\(sign)\(deltaValue)%"
     }
 
-<<<<<<< HEAD
     static func codexCombinedPercentText(
         sessionWindow: RateWindow?,
         weeklyWindow: RateWindow?,
@@ -39,7 +38,8 @@ enum MenuBarDisplayText {
         guard let minutes = window.windowMinutes, minutes > 0 else { return "S" }
         guard minutes.isMultiple(of: 60) else { return "\(minutes)m" }
         return "\(minutes / 60)h"
-=======
+    }
+
     static func resetTimeText(
         window: RateWindow?,
         resetTimeDisplayStyle: ResetTimeDisplayStyle = .countdown,
@@ -59,7 +59,6 @@ enum MenuBarDisplayText {
             return "↻ \(resetDescription)"
         }
         return nil
->>>>>>> origin/dev-feat
     }
 
     static func displayText(

@@ -311,13 +311,11 @@ struct StorageBreakdownMenuView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
-}
 
     private var providerColor: Color {
         ProviderBrandColorResolver.shared.color(for: self.footprint.provider).swiftUIColor
     }
 }
-#endif
 
 struct StoragePathCopyButton: View {
     let path: String
