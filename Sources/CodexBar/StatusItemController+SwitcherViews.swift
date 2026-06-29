@@ -44,6 +44,9 @@ final class ProviderSwitcherView: NSView {
     private static let quotaIndicatorHeight: CGFloat = 2
     private static let quotaIndicatorBottomInset: CGFloat = 2
     private static let quotaIndicatorHorizontalInset: CGFloat = 8
+    /// Breathing room above and below the switcher row so the tabs aren't jammed
+    /// against the menu's top edge and the separator below.
+    private static let verticalPadding: CGFloat = 6
 
     init(
         providers: [UsageProvider],
@@ -101,6 +104,7 @@ final class ProviderSwitcherView: NSView {
         self.rowHeight = Self.switcherButtonHeight(stackedIcons: self.stackedIcons, rowCount: self.rowCount)
         let height: CGFloat = self.rowHeight * CGFloat(self.rowCount)
             + self.rowSpacing * CGFloat(max(0, self.rowCount - 1))
+            + Self.verticalPadding * 2
         self.preferredWidth = width
         super.init(frame: NSRect(x: 0, y: 0, width: width, height: height))
         Self.clearButtonWidthCache()
@@ -414,8 +418,8 @@ final class ProviderSwitcherView: NSView {
             self.addSubview(rowContainer)
 
             NSLayoutConstraint.activate([
-                rowContainer.topAnchor.constraint(equalTo: self.topAnchor),
-                rowContainer.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+                rowContainer.topAnchor.constraint(equalTo: self.topAnchor, constant: Self.verticalPadding),
+                rowContainer.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -Self.verticalPadding),
                 rowContainer.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: outerPadding),
                 rowContainer.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -outerPadding),
             ])
@@ -467,8 +471,8 @@ final class ProviderSwitcherView: NSView {
         self.addSubview(gridContainer)
 
         NSLayoutConstraint.activate([
-            gridContainer.topAnchor.constraint(equalTo: self.topAnchor),
-            gridContainer.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            gridContainer.topAnchor.constraint(equalTo: self.topAnchor, constant: Self.verticalPadding),
+            gridContainer.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -Self.verticalPadding),
             gridContainer.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: outerPadding),
             gridContainer.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -outerPadding),
         ])
