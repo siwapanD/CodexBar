@@ -131,7 +131,7 @@ struct DisplayPane: View {
                         .pickerStyle(.menu)
                         .frame(maxWidth: 200)
                     }
-                    self.overviewProviderSelector
+                    self.overviewProviderRow
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

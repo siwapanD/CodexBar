@@ -10,7 +10,7 @@ struct ProviderColorSettingsView: View {
     @Bindable var settings: SettingsStore
 
     var body: some View {
-        ProviderSettingsSection(title: L("provider_appearance_section")) {
+        SettingsSection(title: L("provider_appearance_section")) {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("provider_color_title"))
