@@ -8,6 +8,22 @@ extension StatusItemController {
         self.menuBarCountdownRefreshTask?.cancel()
         self.menuBarCountdownRefreshTask = nil
 
+        guard self.settings.menuBarShowsBrandIconWithPercent,
+              self.settings.menuBarDisplayMode == .resetTime
+              || self.settings.menuBarDisplayMode == .percentResetTime,
+              self.settings.resetTimeDisplayStyle == .countdown
+        else {
+            return
+        }
+
+        let resetDates = self.menuBarCountdownProviders().compactMap { provider in
+            self.menuBarMetricWindow(
+                for: provider,
+                snapshot: self.store.snapshot(for: provider))?.resetsAt
+        }
+        guard let delay = Self.menuBarCountdownRefreshDelay(resetDates: resetDates, now: now) else {
+            return
+        }
         var delays: [TimeInterval] = []
         let providers = self.menuBarRefreshProviders()
         if self.settings.menuBarShowsBrandIconWithPercent,

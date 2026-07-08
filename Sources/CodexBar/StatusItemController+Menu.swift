@@ -586,7 +586,48 @@ extension StatusItemController {
                 menu.addItem(.separator())
             }
         }
+
+        if let totalsItem = self.overviewTotalsItem(providers: rows.map { $0.provider }) {
+            menu.addItem(.separator())
+            menu.addItem(totalsItem)
+        }
         return true
+    }
+
+    /// Builds a non-interactive footer summarizing total 30-day token usage and estimated cost
+    /// across the token-based overview providers (Codex, Claude, Vertex AI, Bedrock).
+    private func overviewTotalsItem(providers: [UsageProvider]) -> NSMenuItem? {
+        var totalTokens = 0
+        var totalCost = 0.0
+        var sawTokens = false
+        var sawCost = false
+        for provider in providers {
+            guard let snapshot = self.store.tokenSnapshot(for: provider) else { continue }
+            if let tokens = snapshot.last30DaysTokens {
+                totalTokens += tokens
+                sawTokens = true
+            }
+            if let cost = snapshot.last30DaysCostUSD {
+                totalCost += cost
+                sawCost = true
+            }
+        }
+        guard sawTokens || sawCost else { return nil }
+
+        var parts: [String] = []
+        if sawCost {
+            parts.append(UsageFormatter.usdString(totalCost))
+        }
+        if sawTokens {
+            parts.append("\(UsageFormatter.tokenCountString(totalTokens)) tokens")
+        }
+        let item = NSMenuItem(
+            title: "Total (30d): \(parts.joined(separator: " · "))",
+            action: nil,
+            keyEquivalent: "")
+        item.isEnabled = false
+        item.representedObject = "overviewTotals"
+        return item
     }
 
     private func addOverviewEmptyState(to menu: NSMenu, enabledProviders: [UsageProvider]) {

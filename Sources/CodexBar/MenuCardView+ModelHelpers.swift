@@ -213,8 +213,7 @@ extension UsageMenuCardView.Model {
             return Color(nsColor: .labelColor)
         }
 
-        let color = ProviderDescriptorRegistry.descriptor(for: provider).branding.color
-        return Color(red: color.red, green: color.green, blue: color.blue)
+        return ProviderBrandColorResolver.shared.color(for: provider).swiftUIColor
     }
 
     static func rateWindowLabels(
@@ -538,7 +537,8 @@ extension UsageMenuCardView.Model {
         if input.provider == .copilot, !input.copilotBudgetExtrasEnabled {
             return []
         }
-        return extraRateWindows.map { namedWindow in
+        // The Claude "Designs" quota lane is intentionally hidden from the card.
+        return extraRateWindows.filter { $0.id != Self.hiddenExtraRateWindowID }.map { namedWindow in
             let paceDetail = Self.extraRateWindowPaceDetail(
                 provider: input.provider,
                 window: namedWindow.window,

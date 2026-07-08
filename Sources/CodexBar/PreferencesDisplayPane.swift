@@ -14,110 +14,145 @@ struct DisplayPane: View {
     @Bindable var store: UsageStore
 
     var body: some View {
-        Form {
-            Section {
-                Toggle(isOn: self.$settings.mergeIcons) {
-                    SettingsRowLabel(L("merge_icons_title"), subtitle: L("merge_icons_subtitle"))
-                }
-
-                Toggle(L("switcher_shows_icons_title"), isOn: self.$settings.switcherShowsIcons)
-                    .disabled(!self.settings.mergeIcons)
-
-                Toggle(isOn: self.$settings.menuBarShowsHighestUsage) {
-                    SettingsRowLabel(
-                        L("show_most_used_provider_title"),
-                        subtitle: L("show_most_used_provider_subtitle"))
-                }
-                .disabled(!self.settings.mergeIcons)
-
-                self.overviewProviderRow
-                    .disabled(!self.settings.mergeIcons)
-
-                Toggle(L("hide_critters_title"), isOn: self.$settings.menuBarHidesCritters)
-
-                Toggle(isOn: self.$settings.menuBarShowsBrandIconWithPercent) {
-                    SettingsRowLabel(
-                        L("menu_bar_shows_percent_title"),
-                        subtitle: L("menu_bar_shows_percent_subtitle"))
-                }
-
-                Picker(L("display_mode_title"), selection: self.$settings.menuBarDisplayMode) {
-                    ForEach(MenuBarDisplayMode.allCases) { mode in
-                        Text(mode.label).tag(mode)
+        ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 16) {
+                SettingsSection(contentSpacing: 12) {
+                    Text(L("section_menu_bar"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                    PreferenceToggleRow(
+                        title: L("merge_icons_title"),
+                        subtitle: L("merge_icons_subtitle"),
+                        binding: self.$settings.mergeIcons)
+                    PreferenceToggleRow(
+                        title: L("switcher_shows_icons_title"),
+                        subtitle: L("switcher_shows_icons_subtitle"),
+                        binding: self.$settings.switcherShowsIcons)
+                        .disabled(!self.settings.mergeIcons)
+                        .opacity(self.settings.mergeIcons ? 1 : 0.5)
+                    PreferenceToggleRow(
+                        title: L("show_most_used_provider_title"),
+                        subtitle: L("show_most_used_provider_subtitle"),
+                        binding: self.$settings.menuBarShowsHighestUsage)
+                        .disabled(!self.settings.mergeIcons)
+                        .opacity(self.settings.mergeIcons ? 1 : 0.5)
+                    PreferenceToggleRow(
+                        title: L("hide_critters_title"),
+                        subtitle: L("hide_critters_subtitle"),
+                        binding: self.$settings.menuBarHidesCritters)
+                    PreferenceToggleRow(
+                        title: L("menu_bar_shows_percent_title"),
+                        subtitle: L("menu_bar_shows_percent_subtitle"),
+                        binding: self.$settings.menuBarShowsBrandIconWithPercent)
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L("display_mode_title"))
+                                .font(.body)
+                            Text(L("display_mode_subtitle"))
+                                .font(.footnote)
+                                .foregroundStyle(.tertiary)
+                        }
+                        Spacer()
+                        Picker(L("Display mode"), selection: self.$settings.menuBarDisplayMode) {
+                            ForEach(MenuBarDisplayMode.allCases) { mode in
+                                Text(mode.label).tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: 200)
                     }
-                }
-                .disabled(!self.settings.menuBarShowsBrandIconWithPercent)
-            } header: {
-                Text(L("section_menu_bar"))
-            }
-
-            Section {
-                Toggle(L("show_usage_as_used_title"), isOn: self.$settings.usageBarsShowUsed)
-
-                Toggle(isOn: self.$settings.quotaWarningMarkersVisible) {
-                    SettingsRowLabel(
-                        L("show_quota_warning_markers_title"),
-                        subtitle: L("show_quota_warning_markers_subtitle"))
+                    .disabled(!self.settings.menuBarShowsBrandIconWithPercent)
+                    .opacity(self.settings.menuBarShowsBrandIconWithPercent ? 1 : 0.5)
                 }
 
-                Picker(L("weekly_progress_work_days_title"), selection: self.$settings.weeklyProgressWorkDays) {
-                    Text(L("Off")).tag(nil as Int?)
-                    Text(L("4 days")).tag(4 as Int?)
-                    Text(L("5 days")).tag(5 as Int?)
-                    Text(L("7 days")).tag(7 as Int?)
-                }
+                Divider()
 
-                Toggle(L("show_reset_time_as_clock_title"), isOn: self.$settings.resetTimesShowAbsolute)
-
-                Toggle(L("show_provider_changelog_links_title"), isOn: self.$settings.providerChangelogLinksEnabled)
-
-                Toggle(isOn: self.$settings.showOptionalCreditsAndExtraUsage) {
-                    SettingsRowLabel(
-                        L("show_credits_extra_usage_title"),
-                        subtitle: L("show_credits_extra_usage_subtitle"))
-                }
-
-                Picker(L("multi_account_layout_title"), selection: self.$settings.multiAccountMenuLayout) {
-                    ForEach(MultiAccountMenuLayout.allCases) { layout in
-                        Text(layout.label).tag(layout)
+                SettingsSection(contentSpacing: 12) {
+                    Text(L("section_menu_content"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                    PreferenceToggleRow(
+                        title: L("show_usage_as_used_title"),
+                        subtitle: L("show_usage_as_used_subtitle"),
+                        binding: self.$settings.usageBarsShowUsed)
+                    PreferenceToggleRow(
+                        title: L("show_quota_warning_markers_title"),
+                        subtitle: L("show_quota_warning_markers_subtitle"),
+                        binding: self.$settings.quotaWarningMarkersVisible)
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L("weekly_progress_work_days_title"))
+                                .font(.body)
+                            Text(L("weekly_progress_work_days_subtitle"))
+                                .font(.footnote)
+                                .foregroundStyle(.tertiary)
+                        }
+                        Spacer()
+                        Picker(L("weekly_progress_work_days_title"), selection: self.$settings.weeklyProgressWorkDays) {
+                            Text(L("Off")).tag(nil as Int?)
+                            Text(L("4 days")).tag(4 as Int?)
+                            Text(L("5 days")).tag(5 as Int?)
+                            Text(L("7 days")).tag(7 as Int?)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: 100)
                     }
+                    PreferenceToggleRow(
+                        title: L("show_reset_time_as_clock_title"),
+                        subtitle: L("show_reset_time_as_clock_subtitle"),
+                        binding: self.$settings.resetTimesShowAbsolute)
+                    PreferenceToggleRow(
+                        title: L("show_provider_changelog_links_title"),
+                        subtitle: L("show_provider_changelog_links_subtitle"),
+                        binding: self.$settings.providerChangelogLinksEnabled)
+                    PreferenceToggleRow(
+                        title: L("show_credits_extra_usage_title"),
+                        subtitle: L("show_credits_extra_usage_subtitle"),
+                        binding: self.$settings.showOptionalCreditsAndExtraUsage)
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L("multi_account_layout_title"))
+                                .font(.body)
+                            Text(L("multi_account_layout_subtitle"))
+                                .font(.footnote)
+                                .foregroundStyle(.tertiary)
+                        }
+                        Spacer()
+                        Picker(L("multi_account_layout_title"), selection: self.$settings.multiAccountMenuLayout) {
+                            ForEach(MultiAccountMenuLayout.allCases) { layout in
+                                Text(layout.label).tag(layout)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(maxWidth: 200)
+                    }
+                    self.overviewProviderSelector
                 }
-            } header: {
-                Text(L("section_menu_content"))
             }
-
-            CostSummarySettingsSection(settings: self.settings, store: self.store)
-
-            Section {
-                Toggle(isOn: self.$settings.randomBlinkEnabled) {
-                    SettingsRowLabel(L("surprise_me_title"), subtitle: L("surprise_me_subtitle"))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .onAppear {
+                self.reconcileOverviewSelection()
+            }
+            .onChange(of: self.settings.mergeIcons) { _, isEnabled in
+                guard isEnabled else {
+                    self.isOverviewProviderPopoverPresented = false
+                    return
                 }
-
-                Toggle(L("session_limit_confetti_title"), isOn: self.$settings.confettiOnSessionLimitResetsEnabled)
-
-                Toggle(L("weekly_limit_confetti_title"), isOn: self.$settings.confettiOnWeeklyLimitResetsEnabled)
-            } header: {
-                Text(L("section_loading_animations"))
+                self.reconcileOverviewSelection()
             }
-        }
-        .formStyle(.grouped)
-        .toggleStyle(.switch)
-        .scrollContentBackground(.hidden)
-        .onAppear {
-            self.reconcileOverviewSelection()
-        }
-        .onChange(of: self.settings.mergeIcons) { _, isEnabled in
-            guard isEnabled else {
-                self.isOverviewProviderPopoverPresented = false
-                return
+            .onChange(of: self.activeProvidersInOrder) { _, _ in
+                if self.activeProvidersInOrder.isEmpty {
+                    self.isOverviewProviderPopoverPresented = false
+                }
+                self.reconcileOverviewSelection()
             }
-            self.reconcileOverviewSelection()
-        }
-        .onChange(of: self.activeProvidersInOrder) { _, _ in
-            if self.activeProvidersInOrder.isEmpty {
-                self.isOverviewProviderPopoverPresented = false
-            }
-            self.reconcileOverviewSelection()
         }
     }
 

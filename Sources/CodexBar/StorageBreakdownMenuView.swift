@@ -311,31 +311,11 @@ struct StorageBreakdownMenuView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
-}
 
-#if DEBUG
-extension StorageBreakdownMenuView {
-    var _segmentNamesForTesting: [String] {
-        self.segments.map(\.name)
-    }
-
-    var _segmentBytesForTesting: [Int64] {
-        self.segments.map(\.bytes)
-    }
-
-    var _overflowNamesForTesting: [String] {
-        self.overflowComponents.map(\.name)
-    }
-
-    var _overflowExpansionHeightForTesting: CGFloat {
-        self.overflowExpansionHeight
-    }
-
-    func _segmentWidthsForTesting(barWidth: CGFloat) -> [CGFloat] {
-        self.segments.map { self.segmentWidth($0, barWidth: barWidth) }
+    private var providerColor: Color {
+        ProviderBrandColorResolver.shared.color(for: self.footprint.provider).swiftUIColor
     }
 }
-#endif
 
 struct StoragePathCopyButton: View {
     let path: String
