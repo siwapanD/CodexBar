@@ -174,6 +174,8 @@ struct ProviderDetailView<SupplementaryContent: View>: View {
                 self.supplementarySettingsContent
             }
 
+            ProviderColorSettingsView(provider: self.provider, settings: self.store.settings)
+
                 ProviderQuotaWarningSettingsView(provider: self.provider, settings: self.store.settings)
 
             if !self.settingsToggles.isEmpty {
