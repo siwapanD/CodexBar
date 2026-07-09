@@ -23,6 +23,11 @@ public struct CostUsageWindowSummary: Sendable, Equatable {
 }
 
 public struct CostUsageTokenSnapshot: Sendable, Equatable {
+    /// Sentinel passed to `summary(forLastDays:)` / `comparisonSummaries(periods:)` to request the total over
+    /// every loaded daily entry, regardless of calendar window. Rendered as "Available local logs", never
+    /// "Lifetime" or "All-time" — local logs can be pruned or moved, so this is not a lifetime guarantee.
+    public static let allTimeDaysMarker = Int.max
+
     public let sessionTokens: Int?
     public let sessionCostUSD: Double?
     public let sessionRequests: Int?
@@ -71,6 +76,17 @@ public struct CostUsageTokenSnapshot: Sendable, Equatable {
     }
 
     public func summary(forLastDays requestedDays: Int, calendar: Calendar = .current) -> CostUsageWindowSummary {
+        if requestedDays == Self.allTimeDaysMarker {
+            let costs = self.daily.compactMap(\.costUSD)
+            let tokens = self.daily.compactMap(\.totalTokens)
+            let requests = self.daily.compactMap(\.requestCount)
+            return CostUsageWindowSummary(
+                days: requestedDays,
+                totalTokens: tokens.isEmpty ? nil : tokens.reduce(0, +),
+                totalCostUSD: costs.isEmpty ? nil : costs.reduce(0, +),
+                totalRequests: requests.isEmpty ? nil : requests.reduce(0, +),
+                entryCount: self.daily.count)
+        }
         let days = max(1, requestedDays)
         let today = calendar.startOfDay(for: self.updatedAt)
         let start = calendar.date(byAdding: .day, value: -(days - 1), to: today) ?? today
@@ -92,11 +108,16 @@ public struct CostUsageTokenSnapshot: Sendable, Equatable {
     }
 
     public func comparisonSummaries(
-        periods: [Int] = [7, 30, 90],
+        periods: [Int] = [7, 30, 90, 365, CostUsageTokenSnapshot.allTimeDaysMarker],
         calendar: Calendar = .current) -> [CostUsageWindowSummary]
     {
         Array(Set(periods.map { max(1, $0) }))
-            .filter { $0 < self.historyDays }
+            .filter {
+                if $0 == CostUsageTokenSnapshot.allTimeDaysMarker {
+                    return self.historyDays >= 30
+                }
+                return $0 < self.historyDays
+            }
             .sorted()
             .map { self.summary(forLastDays: $0, calendar: calendar) }
     }

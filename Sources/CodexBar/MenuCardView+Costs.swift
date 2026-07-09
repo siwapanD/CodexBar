@@ -188,7 +188,10 @@ extension UsageMenuCardView.Model {
     }
 
     static func costHistoryWindowLabel(days: Int) -> String {
-        days == 1 ? L("Today") : String(format: L("Last %d days"), days)
+        if days == CostUsageTokenSnapshot.allTimeDaysMarker {
+            return L("Available local logs")
+        }
+        return days == 1 ? L("Today") : String(format: L("Last %d days"), days)
     }
 
     private static func latestBillingDayLabel(from snapshot: CostUsageTokenSnapshot) -> String {
